@@ -2,10 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from typing import List
 
-def sample_no_signalling(num: int=1, local=None)->List[np.array]:
+def sample_no_signalling(num: int=1, local=None, output_img=True)->List[np.array]:
     result = list()
     for i in range(num):
-        result.append(generate_img(sample_no_signalling_one(local)))
+        sample = sample_no_signalling_one(local)
+        r = generate_img(sample) if output_img else sample.flatten()
+        result.append(r)
     return result
 
 def sample_no_signalling_one(local=None)->np.array:
@@ -56,7 +58,7 @@ def check_locality(box: np.array)->bool:
     p00_01, p10_01, p00_11, p10_11 = box[2,:]
     p01_01, p11_01, p01_11, p11_11 = box[3,:]
     
-    c1 = p01_00 + p10_00 + p00_10 + p11_10 + p00_01 + p11_01 + p01_11 + p10_11
+    c1 = p01_00 + p10_00 + p00_10 + p11_10 + p00_01 + p11_01 + p00_11 + p11_11
     c2 = p00_00 + p11_00 + p01_10 + p10_10 + p00_01 + p11_01 + p00_11 + p11_11
     c3 = p00_00 + p11_00 + p00_10 + p11_10 + p01_01 + p10_01 + p00_11 + p11_11
     c4 = p00_00 + p11_00 + p00_10 + p11_10 + p00_01 + p11_01 + p01_11 + p10_11
