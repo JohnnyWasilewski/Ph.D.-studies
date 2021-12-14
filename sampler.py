@@ -2,13 +2,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 from typing import List
 
-def sample_no_signalling(num: int=1, local=None, output_img=True)->List[np.array]:
-    result = list()
-    for i in range(num):
-        sample = sample_no_signalling_one(local)
-        r = generate_img(sample) if output_img else sample.flatten()
-        result.append(r)
-    return result
+def sample_no_signalling(num: int=1, local=None, output_format=0)->List[np.array]:
+    sample = [sample_no_signalling_one(local) for _ in range(num)]
+    if output_format == 0:
+        post_process = lambda x: x.flatten()
+    elif output_format == 1:
+        post_process = generate_img
+    elif output_format == 2:
+        post_process = generate_img_gradient
+    else:
+        print('Not valid output format')
+        return
+    return list(map(post_process, sample))
+
 
 def sample_no_signalling_one(local=None)->np.array:
     A, B, C = np.random.uniform(size=(3,2,2))
@@ -51,6 +57,12 @@ def generate_img(box: np.array, resolution = 100)->np.array:
         img.append(np.hstack(img_row))
     img = np.vstack(img)
     return img
+
+def generate_img_gradient(box: np.array, resolution: int=8)->np.array:
+    img = []
+    for row in box:
+        img.append(np.hstack([np.ones(shape=(resolution, resolution)) * element for element in row]))
+    return np.vstack(img)
 
 def check_locality(box: np.array)->bool:
     p00_00, p10_00, p00_10, p10_10 = box[0,:]
