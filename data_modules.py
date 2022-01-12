@@ -11,6 +11,21 @@ import torch
 from torchvision import transforms
 
 
+class MyDatasetOfImages(Dataset):
+    def __init__(self, data, targets, transform):
+        self.data = data
+        self.targets = targets
+        self.transform = transform
+        
+    def __getitem__(self, idx):
+        x = self.data[idx]
+        x = torch.tensor(np.expand_dims(x, 0), dtype=torch.float)
+        y = self.targets[idx]
+        return x, y
+    
+    def __len__(self):
+        return len(self.targets)
+    
 class MyDataset(Dataset):
     def __init__(self, data, targets, transform):
         self.data = data
@@ -18,8 +33,6 @@ class MyDataset(Dataset):
         self.transform = transform
         
     def __getitem__(self, idx):
-        #x = Image.fromarray(self.data[idx].astype(np.uint8))
-        #x = self.transform(x)
         x = self.data[idx]
         y = self.targets[idx]
         return x, y
@@ -27,9 +40,8 @@ class MyDataset(Dataset):
     def __len__(self):
         return len(self.targets)
     
-    
 class MyDataModule(pl.LightningDataModule):
-    def __init__(self, X, y, transform, num_workers):
+    def __init__(self, X, y, transform, num_workers, dataset):
         super().__init__()
         self.X = X
         self.y = torch.FloatTensor(y).to(torch.float64)
@@ -37,13 +49,14 @@ class MyDataModule(pl.LightningDataModule):
         self.num_workers = num_workers
         self.num_classes = np.unique(y)
         self.dims = X[0].shape
+        self.dataset = dataset
     
     def setup(self, stage):
         X_train_val, X_test, y_train_val, y_test = train_test_split(self.X, self.y)
         X_train, X_val, y_train, y_val = train_test_split(X_train_val, y_train_val)
-        self.train_dataset = MyDataset(X_train, y_train, self.transform)
-        self.test_dataset = MyDataset(X_test, y_test, self.transform)
-        self.val_dataset = MyDataset(X_val, y_val, self.transform)
+        self.train_dataset = self.dataset(X_train, y_train, self.transform)
+        self.test_dataset = self.dataset(X_test, y_test, self.transform)
+        self.val_dataset = self.dataset(X_val, y_val, self.transform)
     
     def train_dataloader(self):
         return DataLoader(self.train_dataset, batch_size=50, num_workers=self.num_workers)
